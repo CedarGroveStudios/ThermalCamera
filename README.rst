@@ -20,7 +20,7 @@ Introduction
 
 A PyGamer/PyBadge thermal imaging tool.
 
-.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/photos%20and%20graphics/DSC05948_comp_wide.jpg
+.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/media/photos%20and%20graphics/DSC05948_comp_wide.jpg
 
 The Thermal Camera is a portable AMG8833-based thermopile array imager device
 implemented using CircuitPython on an Adafruit PyGamer
@@ -47,7 +47,7 @@ An upgraded version with increased resolution (15x15) and color depth is
 described in the Improved AMG8833 PyGamer Thermal Camera Learning Guide:
 (https://learn.adafruit.com/improved-amg8833-pygamer-thermal-camera).
 
-.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/photos%20and%20graphics/DSC05961a_wide.jpg
+.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/media/photos%20and%20graphics/DSC05961a_wide.jpg
 
 Project Description
 ===================
@@ -93,7 +93,7 @@ Optional (for future versions):
 6) Selectable display color spectrum. The index_to_rgb folder already contains helpers for the visible and grayscale spectrums.
 
 
-.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/photos%20and%20graphics/DSC05942a_wide.jpg
+.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/media/photos%20and%20graphics/DSC05942a_wide.jpg
 
 Dependencies
 =============

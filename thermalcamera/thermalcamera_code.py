@@ -8,10 +8,10 @@ The PyGamer/PyBadge Thermal Camera Project
 """
 
 import time
+import gc
 import board
 import keypad
 import busio
-import gc
 from ulab import numpy as np
 import displayio
 import neopixel
@@ -102,7 +102,7 @@ GRID_DATA = np.array(range(GRID_AXIS**2)).reshape((GRID_AXIS, GRID_AXIS)) / (
     GRID_AXIS**2
 )
 # Set up the histogram accumulation narray
-HISTOGRAM = np.zeros(GRID_AXIS)
+# HISTOGRAM = np.zeros(GRID_AXIS)
 
 # Convert default alarm and min/max range values from config file
 ALARM_C = fahrenheit_to_celsius(ALARM_F)
@@ -124,7 +124,6 @@ SETUP_COLORS = [("ALARM", WHITE), ("RANGE", RED), ("RANGE", CYAN)]
 def play_tone(freq=440, duration=0.01):
     """Play a tone over the speaker"""
     tone(board.A0, freq, duration)
-    return
 
 
 def flash_status(text="", duration=0.05):
@@ -135,21 +134,19 @@ def flash_status(text="", duration=0.05):
     status_label.color = BLACK
     time.sleep(duration)
     status_label.text = ""
-    return
 
 
 def update_image_frame(selfie=False):
     """Get camera data and update display"""
-    for row in range(0, GRID_AXIS):
-        for col in range(0, GRID_AXIS):
+    for _row in range(0, GRID_AXIS):
+        for _col in range(0, GRID_AXIS):
             if selfie:
-                color_index = GRID_DATA[GRID_AXIS - 1 - row][col]
+                color_index = GRID_DATA[GRID_AXIS - 1 - _row][_col]
             else:
-                color_index = GRID_DATA[GRID_AXIS - 1 - row][GRID_AXIS - 1 - col]
+                color_index = GRID_DATA[GRID_AXIS - 1 - _row][GRID_AXIS - 1 - _col]
             color = index_to_rgb(round(color_index * PALETTE_SIZE, 0) / PALETTE_SIZE)
-            if color != image_group[((row * GRID_AXIS) + col)].fill:
-                image_group[((row * GRID_AXIS) + col)].fill = color
-    return
+            if color != image_group[((_row * GRID_AXIS) + _col)].fill:
+                image_group[((_row * GRID_AXIS) + _col)].fill = color
 
 
 def update_histo_frame():
@@ -157,27 +154,26 @@ def update_histo_frame():
     min_histo.text = str(MIN_RANGE_F)  # Display the legend
     max_histo.text = str(MAX_RANGE_F)
 
-    HISTOGRAM = np.zeros(GRID_AXIS)  # Clear histogram accumulation array
+    histogram = np.zeros(GRID_AXIS)  # Clear histogram accumulation array
     # Collect camera data and calculate the histogram
-    for row in range(0, GRID_AXIS):
-        for col in range(0, GRID_AXIS):
-            histo_index = int(map_range(GRID_DATA[col, row], 0, 1, 0, GRID_AXIS - 1))
-            HISTOGRAM[histo_index] = HISTOGRAM[histo_index] + 1
+    for _row in range(0, GRID_AXIS):
+        for _col in range(0, GRID_AXIS):
+            histo_index = int(map_range(GRID_DATA[_col, _row], 0, 1, 0, GRID_AXIS - 1))
+            histogram[histo_index] = histogram[histo_index] + 1
 
-    histo_scale = np.max(HISTOGRAM) / (GRID_AXIS - 1)
+    histo_scale = np.max(histogram) / (GRID_AXIS - 1)
     if histo_scale <= 0:
         histo_scale = 1
 
     # Display the histogram
-    for col in range(0, GRID_AXIS):
-        for row in range(0, GRID_AXIS):
-            if HISTOGRAM[col] / histo_scale > GRID_AXIS - 1 - row:
-                image_group[((row * GRID_AXIS) + col)].fill = index_to_rgb(
-                    round((col / GRID_AXIS), 3)
+    for _col in range(0, GRID_AXIS):
+        for _row in range(0, GRID_AXIS):
+            if histogram[_col] / histo_scale > GRID_AXIS - 1 - _row:
+                image_group[((_row * GRID_AXIS) + _col)].fill = index_to_rgb(
+                    round((_col / GRID_AXIS), 3)
                 )
             else:
-                image_group[((row * GRID_AXIS) + col)].fill = BLACK
-    return
+                image_group[((_row * GRID_AXIS) + _col)].fill = BLACK
 
 
 def ulab_bilinear_interpolation():
@@ -189,9 +185,10 @@ def ulab_bilinear_interpolation():
     GRID_DATA[::, 1::2] = GRID_DATA[::, :-1:2]
     GRID_DATA[::, 1::2] += GRID_DATA[::, 2::2]
     GRID_DATA[::, 1::2] /= 2
-    return
 
 
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-statements
 def setup_mode():
     """Change alarm threshold and minimum/maximum range values"""
     status_label.color = WHITE
@@ -224,16 +221,16 @@ def setup_mode():
 
             param_index -= get_joystick()
 
-            buttons = panel.events.get()
-            if buttons and buttons.pressed:
-                if buttons.key_number == BUTTON_UP:  # HOLD button pressed
+            _buttons = panel.events.get()
+            if _buttons and _buttons.pressed:
+                if _buttons.key_number == BUTTON_UP:  # HOLD button pressed
                     param_index = param_index - 1
-                if buttons.key_number == BUTTON_DOWN:  # SET button pressed
+                if _buttons.key_number == BUTTON_DOWN:  # SET button pressed
                     param_index = param_index + 1
-                if buttons.key_number == BUTTON_HOLD:  # HOLD button pressed
+                if _buttons.key_number == BUTTON_HOLD:  # HOLD button pressed
                     play_tone(1319, 0.030)  # Musical note E6
                     setup_state = "ADJUST_VALUE"  # Next state
-                if buttons.key_number == BUTTON_SET:  # SET button pressed
+                if _buttons.key_number == BUTTON_SET:  # SET button pressed
                     play_tone(1319, 0.030)  # Musical note E6
                     setup_state = "EXIT"  # Next state
 
@@ -252,16 +249,16 @@ def setup_mode():
 
             param_value += get_joystick()
 
-            buttons = panel.events.get()
-            if buttons and buttons.pressed:
-                if buttons.key_number == BUTTON_UP:  # HOLD button pressed
+            _buttons = panel.events.get()
+            if _buttons and _buttons.pressed:
+                if _buttons.key_number == BUTTON_UP:  # HOLD button pressed
                     param_value = param_value + 1
-                if buttons.key_number == BUTTON_DOWN:  # SET button pressed
+                if _buttons.key_number == BUTTON_DOWN:  # SET button pressed
                     param_value = param_value - 1
-                if buttons.key_number == BUTTON_HOLD:  # HOLD button pressed
+                if _buttons.key_number == BUTTON_HOLD:  # HOLD button pressed
                     play_tone(1319, 0.030)  # Musical note E6
                     setup_state = "SETUP"  # Next state
-                if buttons.key_number == BUTTON_SET:  # SET button pressed
+                if _buttons.key_number == BUTTON_SET:  # SET button pressed
                     play_tone(1319, 0.030)  # Musical note E6
                     setup_state = "EXIT"  # Next state
 
@@ -497,7 +494,7 @@ while True:
     print(f" 2) stats:   {(mkr_t5 - mkr_t4):6.3f} sec")
     print(f" 3) convert: {(mkr_t6 - mkr_t5):6.3f} sec")
     print(f" 4) display: {(mkr_t7 - mkr_t6):6.3f} sec")
-    print(f"             =======")
+    print("             =======")
     print(f"total frame: {(mkr_t7 - mkr_t2):6.3f} sec  ", end="")
     print(f"{(1 / (mkr_t7 - mkr_t2)):5.1f}   /sec")
     print(f"           free memory:   {mem_fm7 / 1000:6.3f} Kb")

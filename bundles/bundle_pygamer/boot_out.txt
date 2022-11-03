@@ -1,0 +1,3 @@
+Adafruit CircuitPython 8.0.0-beta.4 on 2022-10-30; Adafruit PyGamer with samd51j19
+Board ID:pygamer
+UID:8D0CEAAB3254375320202039343510FF

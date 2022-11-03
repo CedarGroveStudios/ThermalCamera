@@ -1,8 +1,11 @@
 # SPDX-FileCopyrightText: 2021 Jan Goolsbey for Adafruit Industries
 # SPDX-License-Identifier: MIT
 
-# Thermal_Cam_v80_PyGamer_code.py
-# 2022-11-03 8.0.0  # CircuitPython 8.0.x compatible
+"""
+`thermalcamera_code`
+================================================================================
+The PyGamer/PyBadge Thermal Camera Project
+"""
 
 import time
 import board
@@ -20,8 +23,11 @@ from adafruit_bitmap_font import bitmap_font
 from adafruit_display_shapes.rect import Rect
 import adafruit_amg88xx
 from index_to_rgb.iron import index_to_rgb
-from thermal_cam_converters import celsius_to_fahrenheit, fahrenheit_to_celsius
-from thermal_cam_config import ALARM_F, MIN_RANGE_F, MAX_RANGE_F, SELFIE
+from thermalcamera_converters import celsius_to_fahrenheit, fahrenheit_to_celsius
+from thermalcamera_config import ALARM_F, MIN_RANGE_F, MAX_RANGE_F, SELFIE
+
+__version__ = "0.0.0+auto.0"
+__repo__ = "https://github.com/CedarGroveStudios/ThermalCamera.git"
 
 # Instantiate the integral display and define its size
 display = board.DISPLAY
@@ -75,7 +81,7 @@ amg8833 = adafruit_amg88xx.AMG88XX(i2c)
 
 # Display splash graphics
 splash = displayio.Group(scale=display.width // 160)
-bitmap = displayio.OnDiskBitmap("/thermal_cam_splash.bmp")
+bitmap = displayio.OnDiskBitmap("/thermalcamera_splash.bmp")
 splash.append(displayio.TileGrid(bitmap, pixel_shader=bitmap.pixel_shader))
 board.DISPLAY.show(splash)
 
@@ -486,13 +492,13 @@ while True:
     print(f"  free memory:    {mem_fm1 / 1000:6.3f} Kb")
     print("")
     print("                          rate")
-    print(f" 1) acquire: {(mkr_t4 - mkr_t2):6.3f} sec  ",end="")
+    print(f" 1) acquire: {(mkr_t4 - mkr_t2):6.3f} sec  ", end="")
     print(f"{(1 / (mkr_t4 - mkr_t2)):5.1f}  /sec")
     print(f" 2) stats:   {(mkr_t5 - mkr_t4):6.3f} sec")
     print(f" 3) convert: {(mkr_t6 - mkr_t5):6.3f} sec")
     print(f" 4) display: {(mkr_t7 - mkr_t6):6.3f} sec")
     print(f"             =======")
-    print(f"total frame: {(mkr_t7 - mkr_t2):6.3f} sec  ",end="")
+    print(f"total frame: {(mkr_t7 - mkr_t2):6.3f} sec  ", end="")
     print(f"{(1 / (mkr_t7 - mkr_t2)):5.1f}   /sec")
     print(f"           free memory:   {mem_fm7 / 1000:6.3f} Kb")
     print("")

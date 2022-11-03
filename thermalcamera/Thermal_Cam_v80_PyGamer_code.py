@@ -9,7 +9,7 @@ import board
 import keypad
 import busio
 import gc
-import ulab
+from ulab import numpy as np
 import displayio
 import neopixel
 from analogio import AnalogIn
@@ -90,11 +90,13 @@ CELL_SIZE = GRID_SIZE // GRID_AXIS  # Size of a grid cell in pixels
 PALETTE_SIZE = 100  # Number of display colors in spectral palette (must be > 0)
 
 # Set up the 2-D sensor data narray
-SENSOR_DATA = ulab.numpy.array(range(SENSOR_AXIS ** 2)).reshape((SENSOR_AXIS, SENSOR_AXIS))
+SENSOR_DATA = np.array(range(SENSOR_AXIS**2)).reshape((SENSOR_AXIS, SENSOR_AXIS))
 # Set up and load the 2-D display color index narray with a spectrum
-GRID_DATA = ulab.numpy.array(range(GRID_AXIS ** 2)).reshape((GRID_AXIS, GRID_AXIS)) / (GRID_AXIS ** 2)
+GRID_DATA = np.array(range(GRID_AXIS**2)).reshape((GRID_AXIS, GRID_AXIS)) / (
+    GRID_AXIS**2
+)
 # Set up the histogram accumulation narray
-HISTOGRAM = ulab.numpy.zeros(GRID_AXIS)
+HISTOGRAM = np.zeros(GRID_AXIS)
 
 # Convert default alarm and min/max range values from config file
 ALARM_C = fahrenheit_to_celsius(ALARM_F)
@@ -149,14 +151,14 @@ def update_histo_frame():
     min_histo.text = str(MIN_RANGE_F)  # Display the legend
     max_histo.text = str(MAX_RANGE_F)
 
-    HISTOGRAM = ulab.numpy.zeros(GRID_AXIS)  # Clear histogram accumulation array
+    HISTOGRAM = np.zeros(GRID_AXIS)  # Clear histogram accumulation array
     # Collect camera data and calculate the histogram
     for row in range(0, GRID_AXIS):
         for col in range(0, GRID_AXIS):
             histo_index = int(map_range(GRID_DATA[col, row], 0, 1, 0, GRID_AXIS - 1))
             HISTOGRAM[histo_index] = HISTOGRAM[histo_index] + 1
 
-    histo_scale = ulab.numpy.max(HISTOGRAM) / (GRID_AXIS - 1)
+    histo_scale = np.max(HISTOGRAM) / (GRID_AXIS - 1)
     if histo_scale <= 0:
         histo_scale = 1
 
@@ -276,7 +278,7 @@ def get_joystick(param=0):
             return 1
         elif joystick_y.value > 44000:
             # Down
-            return - 1
+            return -1
     return 0
 
 
@@ -284,7 +286,7 @@ play_tone(440, 0.1)  # Musical note A4
 play_tone(880, 0.1)  # Musical note A5
 
 # ### Define the display group ###
-marker_t0 = time.monotonic()  # Time marker: Define Display Elements
+mkr_t0 = time.monotonic()  # Time marker: Define Display Elements
 image_group = displayio.Group(scale=1)
 
 # Define the foundational thermal image grid cells; image_group[0:224]
@@ -366,7 +368,7 @@ range_histo.anchored_position = ((WIDTH // 2) + (GRID_X_OFFSET // 2), 121)
 image_group.append(range_histo)  # image_group[236]
 
 # ###--- PRIMARY PROCESS SETUP ---###
-marker_t1 = time.monotonic()  # Time marker: Primary Process Setup
+mkr_t1 = time.monotonic()  # Time marker: Primary Process Setup
 mem_fm1 = gc.mem_free()  # Monitor free memory
 display_image = True  # Image display mode; False for histogram
 display_hold = False  # Active display mode; True to hold display
@@ -382,19 +384,19 @@ play_tone(880, 0.010)  # Musical note A5
 
 # ###--- PRIMARY PROCESS LOOP ---###
 while True:
-    marker_t2 = time.monotonic()  # Time marker: Acquire Sensor Data
+    mkr_t2 = time.monotonic()  # Time marker: Acquire Sensor Data
     if display_hold:
         flash_status("-HOLD-", 0.25)
     else:
         sensor = amg8833.pixels  # Get sensor_data data
     # Put sensor data in array; limit to the range of 0, 80
-    SENSOR_DATA = ulab.numpy.clip(ulab.numpy.array(sensor), 0, 80)
+    SENSOR_DATA = np.clip(np.array(sensor), 0, 80)
 
     # Update and display alarm setting and max, min, and ave stats
-    marker_t4 = time.monotonic()  # Time marker: Display Statistics
-    v_max = ulab.numpy.max(SENSOR_DATA)
-    v_min = ulab.numpy.min(SENSOR_DATA)
-    v_ave = ulab.numpy.mean(SENSOR_DATA)
+    mkr_t4 = time.monotonic()  # Time marker: Display Statistics
+    v_max = np.max(SENSOR_DATA)
+    v_min = np.min(SENSOR_DATA)
+    v_ave = np.mean(SENSOR_DATA)
 
     alarm_value.text = str(ALARM_F)
     max_value.text = str(celsius_to_fahrenheit(v_max))
@@ -402,13 +404,13 @@ while True:
     ave_value.text = str(celsius_to_fahrenheit(v_ave))
 
     # Normalize temperature to index values and interpolate
-    marker_t5 = time.monotonic()  # Time marker: Normalize and Interpolate
+    mkr_t5 = time.monotonic()  # Time marker: Normalize and Interpolate
     SENSOR_DATA = (SENSOR_DATA - MIN_RANGE_C) / (MAX_RANGE_C - MIN_RANGE_C)
     GRID_DATA[::2, ::2] = SENSOR_DATA  # Copy sensor data to the grid array
     ulab_bilinear_interpolation()  # Interpolate to produce 15x15 result
 
     # Display image or histogram
-    marker_t6 = time.monotonic()  # Time marker: Display Image
+    mkr_t6 = time.monotonic()  # Time marker: Display Image
     if display_image:
         update_image_frame(selfie=SELFIE)
     else:
@@ -428,8 +430,8 @@ while True:
             play_tone(1319, 0.030)  # Musical note E6
             display_hold = not display_hold
 
-        if (buttons.key_number == BUTTON_IMAGE):
-        # Toggle image/histogram mode (display image)
+        if buttons.key_number == BUTTON_IMAGE:
+            # Toggle image/histogram mode (display image)
             play_tone(659, 0.030)  # Musical note E5
             display_image = not display_image
 
@@ -474,24 +476,23 @@ while True:
             MIN_RANGE_C = fahrenheit_to_celsius(MIN_RANGE_F)
             MAX_RANGE_C = fahrenheit_to_celsius(MAX_RANGE_F)
 
-    marker_t7 = time.monotonic()  # Time marker: End of Primary Process
+    mkr_t7 = time.monotonic()  # Time marker: End of Primary Process
     gc.collect()
     mem_fm7 = gc.mem_free()
 
     # Print frame performance report
     print("*** PyBadge/Gamer Performance Stats ***")
-    print(f"    define displayio:      {(marker_t1 - marker_t0):6.3f} sec")
-    print(f"    startup free memory: {mem_fm1 / 1000:6.3} Kb")
+    print(f"  define display: {(mkr_t1 - mkr_t0):6.3f} sec")
+    print(f"  free memory:    {mem_fm1 / 1000:6.3f} Kb")
     print("")
-    print(
-        f" 1) data acquisition: {(marker_t4 - marker_t2):6.3f}      rate:  {(1 / (marker_t4 - marker_t2)):5.1f} /sec"
-    )
-    print(f" 2) display stats:    {(marker_t5 - marker_t4):6.3f}")
-    print(f" 3) interpolate:      {(marker_t6 - marker_t5):6.3f}")
-    print(f" 4) display image:    {(marker_t7 - marker_t6):6.3f}")
-    print(f"                     =======")
-    print(
-        f"total frame:          {(marker_t7 - marker_t2):6.3f} sec  rate:  {(1 / (marker_t7 - marker_t2)):5.1f} /sec"
-    )
-    print(f"                           free memory: {mem_fm7 / 1000:6.3} Kb")
+    print("                          rate")
+    print(f" 1) acquire: {(mkr_t4 - mkr_t2):6.3f} sec  ",end="")
+    print(f"{(1 / (mkr_t4 - mkr_t2)):5.1f}  /sec")
+    print(f" 2) stats:   {(mkr_t5 - mkr_t4):6.3f} sec")
+    print(f" 3) convert: {(mkr_t6 - mkr_t5):6.3f} sec")
+    print(f" 4) display: {(mkr_t7 - mkr_t6):6.3f} sec")
+    print(f"             =======")
+    print(f"total frame: {(mkr_t7 - mkr_t2):6.3f} sec  ",end="")
+    print(f"{(1 / (mkr_t7 - mkr_t2)):5.1f}   /sec")
+    print(f"           free memory:   {mem_fm7 / 1000:6.3f} Kb")
     print("")

@@ -1,1 +1,0 @@
-import Thermal_Cam_v80_PyGamer_code

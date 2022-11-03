@@ -1,2 +1,0 @@
-Adafruit CircuitPython 7.1.1 on 2022-01-14; Adafruit PyGamer with samd51j19
-Board ID:pygamer

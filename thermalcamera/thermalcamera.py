@@ -2,9 +2,11 @@
 # SPDX-License-Identifier: MIT
 
 """
-`thermalcamera_code`
+`thermalcamera`
 ================================================================================
-The PyGamer/PyBadge Thermal Camera Project
+PyGamer/PyBadge Thermal Camera Project
+
+Rename thermalcamera.py to code.py and store in the device's root directory.
 """
 
 import time

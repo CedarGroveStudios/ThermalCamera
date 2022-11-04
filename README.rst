@@ -20,7 +20,7 @@ Introduction
 
 A PyGamer/PyBadge thermal imaging tool.
 
-.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/media/photos%20and%20graphics/DSC05948_comp_wide.jpg
+.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/media/graphics/DSC05948_comp_wide.jpg
 
 The Thermal Camera is a portable AMG8833-based thermopile array imager device
 implemented using CircuitPython on an Adafruit PyGamer
@@ -47,7 +47,7 @@ An upgraded version with increased resolution (15x15) and color depth is
 described in the Improved AMG8833 PyGamer Thermal Camera Learning Guide:
 (https://learn.adafruit.com/improved-amg8833-pygamer-thermal-camera).
 
-.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/media/photos%20and%20graphics/DSC05961a_wide.jpg
+.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/media/graphics/DSC05961a_wide.jpg
 
 Project Description
 ===================
@@ -65,12 +65,12 @@ The design evolved from the initial prototype tests to a final version that met 
 Test video: https://youtu.be/IyMZOlKJu3Q
 
 In addition to Adafruit libraries, the Thermal Camera utilizes a number of PyGamer/PyBadge-stored files and conversion helpers in order to operate:
-*  Thermal_Cam_v60_PyGamer_code.py (renamed to code.py), the primary code module, version 6.0 for CircuitPython v6.x, stored in the root directory (Thermal_Cam_v70_PyGamer_code.py for CircuitPython v7.x is also in this repo)
-*  Thermal_Cam_config.py, a Python-formatted list of default operating parameters in text file format, stored in the root directory
-*  Thermal_Cam_splash.bmp, a bitmapped graphics file used for the opening splash screen, stored in the root directory
-*  OpenSans-9.bdf, a sans serif font file, stored in the fonts folder
-*  Thermal_Cam_converters.py, stored in the root directory
-*  The iron.py helper, stored in the index_to_rgb folder (from CedarGroveStudios/CircuitPython_RGB_SpectrumTools and Adafruit/CircuitPython_Community_Bundle)
+*  ``thermalcamera_code.py`` (renamed to code.py), the primary code module compatible with CircuitPython 8.0.0, stored in the root directory
+*  ``thermalcamera_config.py``, a Python-formatted list of default operating parameters, stored in the root directory
+*  ``thermalcamera_splash.bmp``, a bitmapped graphics file used for the opening splash screen, stored in the root directory
+*  ``OpenSans-9.bdf``, a sans serif font file, stored in the ``fonts`` folder
+*  ``thermalcamera_converters.py``, helpers for temperature conversion, stored in the root directory
+*  The ``iron.py`` spectrum helper, stored in the ``index_to_rgb`` folder (from CedarGroveStudios/CircuitPython_RGB_SpectrumTools and Adafruit/CircuitPython_Community_Bundle)
 
 Primary Project Objectives
 ==========================
@@ -90,10 +90,10 @@ Optional (for future versions):
 3) Interactive minimum and maximum display range settings.
 4) Record and retain monitoring history for up to two hours. Display historical data or create file for external analysis.
 5) Selectable Celsius or Fahrenheit numerical display.
-6) Selectable display color spectrum. The index_to_rgb folder already contains helpers for the visible and grayscale spectrums.
+6) Selectable display color spectrum. The ``index_to_rgb`` folder already contains helpers for the visible and grayscale spectrums.
 
 
-.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/media/photos%20and%20graphics/DSC05942a_wide.jpg
+.. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/media/graphics/DSC05942a_wide.jpg
 
 Dependencies
 =============

@@ -273,13 +273,13 @@ def setup_mode():
     return int(alarm_value.text), int(max_value.text), int(min_value.text)
 
 
-def get_joystick(param=0):
-    # Read the joystick and interpret as up/down buttons (PyGamer)
+def get_joystick():
+    """Read the joystick and interpret as up/down buttons (PyGamer)"""
     if HAS_JOYSTICK:
         if joystick_y.value < 20000:
             # Up
             return 1
-        elif joystick_y.value > 44000:
+        if joystick_y.value > 44000:
             # Down
             return -1
     return 0
@@ -372,10 +372,13 @@ image_group.append(range_histo)  # image_group[236]
 
 # ###--- PRIMARY PROCESS SETUP ---###
 mkr_t1 = time.monotonic()  # Time marker: Primary Process Setup
+# pylint: disable=no-member
 mem_fm1 = gc.mem_free()  # Monitor free memory
-display_image = True  # Image display mode; False for histogram
-display_hold = False  # Active display mode; True to hold display
-display_focus = False  # Standard display range; True to focus display range
+DISPLAY_IMAGE = True  # Image display mode; False for histogram
+DISPLAY_HOLD = False  # Active display mode; True to hold display
+DISPLAY_FOCUS = False  # Standard display range; True to focus display range
+
+# pylint: disable=invalid-name
 orig_max_range_f = 0  # Establish temporary range variables
 orig_min_range_f = 0
 
@@ -388,7 +391,7 @@ play_tone(880, 0.010)  # Musical note A5
 # ###--- PRIMARY PROCESS LOOP ---###
 while True:
     mkr_t2 = time.monotonic()  # Time marker: Acquire Sensor Data
-    if display_hold:
+    if DISPLAY_HOLD:
         flash_status("-HOLD-", 0.25)
     else:
         sensor = amg8833.pixels  # Get sensor_data data
@@ -414,7 +417,7 @@ while True:
 
     # Display image or histogram
     mkr_t6 = time.monotonic()  # Time marker: Display Image
-    if display_image:
+    if DISPLAY_IMAGE:
         update_image_frame(selfie=SELFIE)
     else:
         update_histo_frame()
@@ -431,14 +434,14 @@ while True:
         if buttons.key_number == BUTTON_HOLD:
             # Toggle display hold (shutter)
             play_tone(1319, 0.030)  # Musical note E6
-            display_hold = not display_hold
+            DISPLAY_HOLD = not DISPLAY_HOLD
 
         if buttons.key_number == BUTTON_IMAGE:
             # Toggle image/histogram mode (display image)
             play_tone(659, 0.030)  # Musical note E5
-            display_image = not display_image
+            DISPLAY_IMAGE = not DISPLAY_IMAGE
 
-            if display_image:
+            if DISPLAY_IMAGE:
                 min_histo.color = None
                 max_histo.color = None
                 range_histo.color = None
@@ -449,8 +452,8 @@ while True:
 
         if buttons.key_number == BUTTON_FOCUS:  # Toggle display focus mode
             play_tone(698, 0.030)  # Musical note F5
-            display_focus = not display_focus
-            if display_focus:
+            DISPLAY_FOCUS = not DISPLAY_FOCUS
+            if DISPLAY_FOCUS:
                 # Set range values to image min/max for focused image display
                 orig_min_range_f = MIN_RANGE_F
                 orig_max_range_f = MAX_RANGE_F

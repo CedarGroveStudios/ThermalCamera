@@ -1,20 +1,15 @@
-# SPDX-FileCopyrightText: 2022 Jan Goolsbey for Adafruit Industries
+# SPDX-FileCopyrightText: 2021 Jan Goolsbey for Adafruit Industries
 # SPDX-License-Identifier: MIT
 
-"""
-`thermalcamera`
-================================================================================
-PyGamer/PyBadge Thermal Camera Project
-
-Rename thermalcamera.py to code.py and store in the device's root directory.
-"""
+# Thermal_Cam_v80_PyGamer_code.py
+# 2022-11-02 8.0.0  # CircuitPython 8.0.x compatible
 
 import time
-import gc
 import board
 import keypad
 import busio
-from ulab import numpy as np
+import gc
+import ulab
 import displayio
 import neopixel
 from analogio import AnalogIn
@@ -24,16 +19,15 @@ from adafruit_display_text.label import Label
 from adafruit_bitmap_font import bitmap_font
 from adafruit_display_shapes.rect import Rect
 import adafruit_amg88xx
-from index_to_rgb.iron import index_to_rgb
-from thermalcamera_converters import celsius_to_fahrenheit, fahrenheit_to_celsius
-from thermalcamera_config import ALARM_F, MIN_RANGE_F, MAX_RANGE_F, SELFIE
+from index_to_rgb.iron_spectrum import index_to_rgb
+from thermal_cam_converters import celsius_to_fahrenheit, fahrenheit_to_celsius
+from thermal_cam_config import ALARM_F, MIN_RANGE_F, MAX_RANGE_F, SELFIE
 
-__version__ = "0.0.0+auto.0"
-__repo__ = "https://github.com/CedarGroveStudios/ThermalCamera.git"
-
-# Instantiate the integral display and define its size
+# Instantiate the display
 display = board.DISPLAY
 display.brightness = 1.0
+
+# Set the board's integral display size
 WIDTH = display.width
 HEIGHT = display.height
 
@@ -51,21 +45,13 @@ else:
     HAS_JOYSTICK = False  # PyBadge with buttons
 
 # Enable the speaker
-DigitalInOut(board.SPEAKER_ENABLE).switch_to_output(value=True)
+speaker_enable = DigitalInOut(board.SPEAKER_ENABLE)
+speaker_enable.switch_to_output(value=True)
 
 # Instantiate and clear the NeoPixels
 pixels = neopixel.NeoPixel(board.NEOPIXEL, 5, pixel_order=neopixel.GRB)
 pixels.brightness = 0.25
 pixels.fill(0x000000)
-
-# Initialize ShiftRegisterKeys to read PyGamer/PyBadge buttons
-panel = keypad.ShiftRegisterKeys(
-    clock=board.BUTTON_CLOCK,
-    data=board.BUTTON_OUT,
-    latch=board.BUTTON_LATCH,
-    key_count=8,
-    value_when_pressed=True,
-)
 
 # Define front panel button event values
 BUTTON_LEFT = 7  # LEFT button
@@ -77,13 +63,25 @@ BUTTON_SET = 2  # START button
 BUTTON_HOLD = 1  # button A
 BUTTON_IMAGE = 0  # button B
 
-# Initiate the AMG8833 Thermal Camera
+# Initialize ShiftRegisterKeys to read PyGamer/PyBadge buttons
+panel = keypad.ShiftRegisterKeys(
+    clock=board.BUTTON_CLOCK,
+    data=board.BUTTON_OUT,
+    latch=board.BUTTON_LATCH,
+    key_count=8,
+    value_when_pressed=True,
+)
+
+UP_EVENT = keypad.Event(BUTTON_UP, True)
+DN_EVENT = keypad.Event(BUTTON_DOWN, True)
+
+# Establish I2C interface for the AMG8833 Thermal Camera
 i2c = busio.I2C(board.SCL, board.SDA, frequency=400000)
 amg8833 = adafruit_amg88xx.AMG88XX(i2c)
 
 # Display splash graphics
 splash = displayio.Group(scale=display.width // 160)
-bitmap = displayio.OnDiskBitmap("/thermalcamera_splash.bmp")
+bitmap = displayio.OnDiskBitmap("/thermal_cam_splash.bmp")
 splash.append(displayio.TileGrid(bitmap, pixel_shader=bitmap.pixel_shader))
 board.DISPLAY.show(splash)
 
@@ -92,24 +90,23 @@ SENSOR_AXIS = 8
 
 # Display grid parameters
 GRID_AXIS = (2 * SENSOR_AXIS) - 1  # Number of cells per axis
-GRID_SIZE = HEIGHT  # Axis size (pixels) for a square grid
+GRID_SIZE = HEIGHT  # Axis pixels size for a square grid; full display height
 GRID_X_OFFSET = WIDTH - GRID_SIZE  # Right-align grid with display boundary
 CELL_SIZE = GRID_SIZE // GRID_AXIS  # Size of a grid cell in pixels
-PALETTE_SIZE = 100  # Number of display colors in spectral palette (must be > 0)
 
-# Set up the 2-D sensor data narray
-SENSOR_DATA = np.array(range(SENSOR_AXIS**2)).reshape((SENSOR_AXIS, SENSOR_AXIS))
-# Set up and load the 2-D display color index narray with a spectrum
-GRID_DATA = np.array(range(GRID_AXIS**2)).reshape((GRID_AXIS, GRID_AXIS)) / (
-    GRID_AXIS**2
-)
-# Set up the histogram accumulation narray
-# HISTOGRAM = np.zeros(GRID_AXIS)
+# Set up sensor data narray
+SENSOR_DATA = ulab.numpy.array(range(SENSOR_AXIS ** 2)).reshape((SENSOR_AXIS, SENSOR_AXIS))
+# Set up and load the display color index narray with a spectrum
+GRID_DATA = ulab.numpy.array(range(GRID_AXIS ** 2)).reshape((GRID_AXIS, GRID_AXIS)) / (GRID_AXIS ** 2)
+# Set up histogram accumulation narray
+HISTOGRAM = ulab.numpy.zeros(GRID_AXIS)
 
 # Convert default alarm and min/max range values from config file
 ALARM_C = fahrenheit_to_celsius(ALARM_F)
 MIN_RANGE_C = fahrenheit_to_celsius(MIN_RANGE_F)
 MAX_RANGE_C = fahrenheit_to_celsius(MAX_RANGE_F)
+
+PALETTE_SIZE = 100  # Number of colors in spectral palette (must be > 0)
 
 # Default colors for temperature value sidebar
 BLACK = 0x000000
@@ -124,58 +121,61 @@ SETUP_COLORS = [("ALARM", WHITE), ("RANGE", RED), ("RANGE", CYAN)]
 
 # ### Helpers ###
 def play_tone(freq=440, duration=0.01):
-    """Play a tone over the speaker"""
+    # Play a tone over the speaker
     tone(board.A0, freq, duration)
+    return
 
 
 def flash_status(text="", duration=0.05):
-    """Flash status message once"""
+    # Flash status message once
     status_label.color = WHITE
     status_label.text = text
     time.sleep(duration)
     status_label.color = BLACK
     time.sleep(duration)
     status_label.text = ""
+    return
 
 
 def update_image_frame(selfie=False):
-    """Get camera data and update display"""
-    for _row in range(0, GRID_AXIS):
-        for _col in range(0, GRID_AXIS):
+    # Get camera data and update display
+    for row in range(0, GRID_AXIS):
+        for col in range(0, GRID_AXIS):
             if selfie:
-                color_index = GRID_DATA[GRID_AXIS - 1 - _row][_col]
+                color_index = GRID_DATA[GRID_AXIS - 1 - row][col]
             else:
-                color_index = GRID_DATA[GRID_AXIS - 1 - _row][GRID_AXIS - 1 - _col]
+                color_index = GRID_DATA[GRID_AXIS - 1 - row][GRID_AXIS - 1 - col]
             color = index_to_rgb(round(color_index * PALETTE_SIZE, 0) / PALETTE_SIZE)
-            if color != image_group[((_row * GRID_AXIS) + _col)].fill:
-                image_group[((_row * GRID_AXIS) + _col)].fill = color
+            if color != image_group[((row * GRID_AXIS) + col)].fill:
+                image_group[((row * GRID_AXIS) + col)].fill = color
+    return
 
 
 def update_histo_frame():
-    """Calculate and display histogram"""
-    min_histo.text = str(MIN_RANGE_F)  # Display the legend
+    # Calculate and display histogram
+    min_histo.text = str(MIN_RANGE_F)  # Display legend
     max_histo.text = str(MAX_RANGE_F)
 
-    histogram = np.zeros(GRID_AXIS)  # Clear histogram accumulation array
-    # Collect camera data and calculate the histogram
-    for _row in range(0, GRID_AXIS):
-        for _col in range(0, GRID_AXIS):
-            histo_index = int(map_range(GRID_DATA[_col, _row], 0, 1, 0, GRID_AXIS - 1))
-            histogram[histo_index] = histogram[histo_index] + 1
+    HISTOGRAM = ulab.numpy.zeros(GRID_AXIS)  # Clear histogram accumulation array
+    for row in range(0, GRID_AXIS):  # Collect camera data and calculate histo
+        for col in range(0, GRID_AXIS):
+            histo_index = int(map_range(GRID_DATA[col, row], 0, 1, 0, GRID_AXIS - 1))
+            HISTOGRAM[histo_index] = HISTOGRAM[histo_index] + 1
 
-    histo_scale = np.max(histogram) / (GRID_AXIS - 1)
+    histo_scale = ulab.numpy.max(HISTOGRAM) / (GRID_AXIS - 1)
     if histo_scale <= 0:
         histo_scale = 1
 
     # Display the histogram
-    for _col in range(0, GRID_AXIS):
-        for _row in range(0, GRID_AXIS):
-            if histogram[_col] / histo_scale > GRID_AXIS - 1 - _row:
-                image_group[((_row * GRID_AXIS) + _col)].fill = index_to_rgb(
-                    round((_col / GRID_AXIS), 3)
+    for col in range(0, GRID_AXIS):
+        for row in range(0, GRID_AXIS):
+            if HISTOGRAM[col] / histo_scale > GRID_AXIS - 1 - row:
+                image_group[((row * GRID_AXIS) + col)].fill = index_to_rgb(
+                    round((col / GRID_AXIS), 3)
                 )
             else:
-                image_group[((_row * GRID_AXIS) + _col)].fill = BLACK
+                image_group[((row * GRID_AXIS) + col)].fill = BLACK
+    return
 
 
 def ulab_bilinear_interpolation():
@@ -187,12 +187,11 @@ def ulab_bilinear_interpolation():
     GRID_DATA[::, 1::2] = GRID_DATA[::, :-1:2]
     GRID_DATA[::, 1::2] += GRID_DATA[::, 2::2]
     GRID_DATA[::, 1::2] /= 2
+    return
 
 
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-statements
 def setup_mode():
-    """Change alarm threshold and minimum/maximum range values"""
+    # Set alarm threshold and minimum/maximum range values
     status_label.color = WHITE
     status_label.text = "-SET-"
 
@@ -207,10 +206,10 @@ def setup_mode():
 
     param_index = 0  # Reset index of parameter to set
 
-    setup_state = "SETUP"  # Set initial state
+    setup_state = "SETUP"
     while setup_state == "SETUP":
         # Select parameter to set
-        setup_state = "SELECT_PARAM"  # Parameter selection state
+        setup_state = "SELECT_PARAM"
         while setup_state == "SELECT_PARAM":
             param_index = max(0, min(2, param_index))
             status_label.text = SETUP_COLORS[param_index][0]
@@ -223,18 +222,18 @@ def setup_mode():
 
             param_index -= get_joystick()
 
-            _buttons = panel.events.get()
-            if _buttons and _buttons.pressed:
-                if _buttons.key_number == BUTTON_UP:  # HOLD button pressed
+            buttons = panel.events.get()
+            if buttons and buttons.pressed:
+                if buttons.key_number == BUTTON_UP:  # HOLD button pressed
                     param_index = param_index - 1
-                if _buttons.key_number == BUTTON_DOWN:  # SET button pressed
+                if buttons.key_number == BUTTON_DOWN:  # SET button pressed
                     param_index = param_index + 1
-                if _buttons.key_number == BUTTON_HOLD:  # HOLD button pressed
-                    play_tone(1319, 0.030)  # Musical note E6
-                    setup_state = "ADJUST_VALUE"  # Next state
-                if _buttons.key_number == BUTTON_SET:  # SET button pressed
-                    play_tone(1319, 0.030)  # Musical note E6
-                    setup_state = "EXIT"  # Next state
+                if buttons.key_number == BUTTON_HOLD:  # HOLD button pressed
+                    play_tone(1319, 0.030)  # E6
+                    setup_state = "ADJUST_VALUE"
+                if buttons.key_number == BUTTON_SET:  # SET button pressed
+                    play_tone(1319, 0.030)  # E6
+                    setup_state = "EXIT"
 
         # Adjust parameter value
         param_value = int(image_group[param_index + 230].text)
@@ -251,18 +250,18 @@ def setup_mode():
 
             param_value += get_joystick()
 
-            _buttons = panel.events.get()
-            if _buttons and _buttons.pressed:
-                if _buttons.key_number == BUTTON_UP:  # HOLD button pressed
+            buttons = panel.events.get()
+            if buttons and buttons.pressed:
+                if buttons.key_number == BUTTON_UP:  # HOLD button pressed
                     param_value = param_value + 1
-                if _buttons.key_number == BUTTON_DOWN:  # SET button pressed
+                if buttons.key_number == BUTTON_DOWN:  # SET button pressed
                     param_value = param_value - 1
-                if _buttons.key_number == BUTTON_HOLD:  # HOLD button pressed
-                    play_tone(1319, 0.030)  # Musical note E6
-                    setup_state = "SETUP"  # Next state
-                if _buttons.key_number == BUTTON_SET:  # SET button pressed
-                    play_tone(1319, 0.030)  # Musical note E6
-                    setup_state = "EXIT"  # Next state
+                if buttons.key_number == BUTTON_HOLD:  # HOLD button pressed
+                    play_tone(1319, 0.030)  # E6
+                    setup_state = "SETUP"
+                if buttons.key_number == BUTTON_SET:  # SET button pressed
+                    play_tone(1319, 0.030)  # E6
+                    setup_state = "EXIT"
 
     # Exit setup process
     status_label.text = "RESUME"
@@ -275,23 +274,23 @@ def setup_mode():
     return int(alarm_value.text), int(max_value.text), int(min_value.text)
 
 
-def get_joystick():
-    """Read the joystick and interpret as up/down buttons (PyGamer)"""
+def get_joystick(param=0):
+    # Read the joystick and interpret as up/down buttons (PyGamer)
     if HAS_JOYSTICK:
         if joystick_y.value < 20000:
             # Up
             return 1
-        if joystick_y.value > 44000:
+        elif joystick_y.value > 44000:
             # Down
-            return -1
+            return - 1
     return 0
 
 
-play_tone(440, 0.1)  # Musical note A4
-play_tone(880, 0.1)  # Musical note A5
+play_tone(440, 0.1)  # A4
+play_tone(880, 0.1)  # A5
 
 # ### Define the display group ###
-mkr_t0 = time.monotonic()  # Time marker: Define Display Elements
+marker_t0 = time.monotonic()  # Time marker: Define Display Elements
 image_group = displayio.Group(scale=1)
 
 # Define the foundational thermal image grid cells; image_group[0:224]
@@ -373,38 +372,35 @@ range_histo.anchored_position = ((WIDTH // 2) + (GRID_X_OFFSET // 2), 121)
 image_group.append(range_histo)  # image_group[236]
 
 # ###--- PRIMARY PROCESS SETUP ---###
-mkr_t1 = time.monotonic()  # Time marker: Primary Process Setup
-# pylint: disable=no-member
+marker_t1 = time.monotonic()  # Time marker: Primary Process Setup
 mem_fm1 = gc.mem_free()  # Monitor free memory
-DISPLAY_IMAGE = True  # Image display mode; False for histogram
-DISPLAY_HOLD = False  # Active display mode; True to hold display
-DISPLAY_FOCUS = False  # Standard display range; True to focus display range
-
-# pylint: disable=invalid-name
+display_image = True  # Image display mode; False for histogram
+display_hold = False  # Active display mode; True to hold display
+display_focus = False  # Standard display range; True to focus display range
 orig_max_range_f = 0  # Establish temporary range variables
 orig_min_range_f = 0
 
-# Activate display, show preloaded sample spectrum, and play welcome tone
+# Activate display, show preloaded spectrum, and play welcome tone
 display.show(image_group)
 update_image_frame()
 flash_status("IRON", 0.75)
-play_tone(880, 0.010)  # Musical note A5
+play_tone(880, 0.010)  # A5
 
 # ###--- PRIMARY PROCESS LOOP ---###
 while True:
-    mkr_t2 = time.monotonic()  # Time marker: Acquire Sensor Data
-    if DISPLAY_HOLD:
+    marker_t2 = time.monotonic()  # Time marker: Acquire Sensor Data
+    if display_hold:
         flash_status("-HOLD-", 0.25)
     else:
         sensor = amg8833.pixels  # Get sensor_data data
     # Put sensor data in array; limit to the range of 0, 80
-    SENSOR_DATA = np.clip(np.array(sensor), 0, 80)
+    SENSOR_DATA = ulab.numpy.clip(ulab.numpy.array(sensor), 0, 80)
 
     # Update and display alarm setting and max, min, and ave stats
-    mkr_t4 = time.monotonic()  # Time marker: Display Statistics
-    v_max = np.max(SENSOR_DATA)
-    v_min = np.min(SENSOR_DATA)
-    v_ave = np.mean(SENSOR_DATA)
+    marker_t4 = time.monotonic()  # Time marker: Display Statistics
+    v_max = ulab.numpy.max(SENSOR_DATA)
+    v_min = ulab.numpy.min(SENSOR_DATA)
+    v_ave = ulab.numpy.mean(SENSOR_DATA)
 
     alarm_value.text = str(ALARM_F)
     max_value.text = str(celsius_to_fahrenheit(v_max))
@@ -412,14 +408,14 @@ while True:
     ave_value.text = str(celsius_to_fahrenheit(v_ave))
 
     # Normalize temperature to index values and interpolate
-    mkr_t5 = time.monotonic()  # Time marker: Normalize and Interpolate
+    marker_t5 = time.monotonic()  # Time marker: Normalize and Interpolate
     SENSOR_DATA = (SENSOR_DATA - MIN_RANGE_C) / (MAX_RANGE_C - MIN_RANGE_C)
     GRID_DATA[::2, ::2] = SENSOR_DATA  # Copy sensor data to the grid array
     ulab_bilinear_interpolation()  # Interpolate to produce 15x15 result
 
     # Display image or histogram
-    mkr_t6 = time.monotonic()  # Time marker: Display Image
-    if DISPLAY_IMAGE:
+    marker_t6 = time.monotonic()  # Time marker: Display Image
+    if display_image:
         update_image_frame(selfie=SELFIE)
     else:
         update_histo_frame()
@@ -427,7 +423,7 @@ while True:
     # If alarm threshold is reached, flash NeoPixels and play alarm tone
     if v_max >= ALARM_C:
         pixels.fill(RED)
-        play_tone(880, 0.015)  # Musical note A5
+        play_tone(880, 0.015)  # A5
         pixels.fill(BLACK)
 
     # See if a panel button is pressed
@@ -435,15 +431,15 @@ while True:
     if buttons and buttons.pressed:
         if buttons.key_number == BUTTON_HOLD:
             # Toggle display hold (shutter)
-            play_tone(1319, 0.030)  # Musical note E6
-            DISPLAY_HOLD = not DISPLAY_HOLD
+            play_tone(1319, 0.030)  # E6
+            display_hold = not display_hold
 
-        if buttons.key_number == BUTTON_IMAGE:
-            # Toggle image/histogram mode (display image)
-            play_tone(659, 0.030)  # Musical note E5
-            DISPLAY_IMAGE = not DISPLAY_IMAGE
+        if (buttons.key_number == BUTTON_IMAGE):
+        # Toggle image/histogram mode (display image)
+            play_tone(659, 0.030)  # E5
+            display_image = not display_image
 
-            if DISPLAY_IMAGE:
+            if display_image:
                 min_histo.color = None
                 max_histo.color = None
                 range_histo.color = None
@@ -452,10 +448,10 @@ while True:
                 max_histo.color = RED
                 range_histo.color = BLUE
 
-        if buttons.key_number == BUTTON_FOCUS:  # Toggle display focus mode
-            play_tone(698, 0.030)  # Musical note F5
-            DISPLAY_FOCUS = not DISPLAY_FOCUS
-            if DISPLAY_FOCUS:
+        if buttons.key_number == BUTTON_FOCUS:  # Toggle focus mode (display focus)
+            play_tone(698, 0.030)  # F5
+            display_focus = not display_focus
+            if display_focus:
                 # Set range values to image min/max for focused image display
                 orig_min_range_f = MIN_RANGE_F
                 orig_max_range_f = MAX_RANGE_F
@@ -476,7 +472,7 @@ while True:
 
         if buttons.key_number == BUTTON_SET:
             # Activate setup mode
-            play_tone(784, 0.030)  # Musical note G5
+            play_tone(784, 0.030)  # G5
 
             # Invoke startup helper; update alarm and range values
             ALARM_F, MAX_RANGE_F, MIN_RANGE_F = setup_mode()
@@ -484,23 +480,23 @@ while True:
             MIN_RANGE_C = fahrenheit_to_celsius(MIN_RANGE_F)
             MAX_RANGE_C = fahrenheit_to_celsius(MAX_RANGE_F)
 
-    mkr_t7 = time.monotonic()  # Time marker: End of Primary Process
+    marker_t7 = time.monotonic()  # Time marker: End of Primary Process
     gc.collect()
     mem_fm7 = gc.mem_free()
 
-    # Print frame performance report
     print("*** PyBadge/Gamer Performance Stats ***")
-    print(f"  define display: {(mkr_t1 - mkr_t0):6.3f} sec")
-    print(f"  free memory:    {mem_fm1 / 1000:6.3f} Kb")
+    print(f"    define displayio:      {(marker_t1 - marker_t0):6.3f} sec")
+    print(f"    startup free memory: {mem_fm1 / 1000:6.3} Kb")
     print("")
-    print("                          rate")
-    print(f" 1) acquire: {(mkr_t4 - mkr_t2):6.3f} sec  ", end="")
-    print(f"{(1 / (mkr_t4 - mkr_t2)):5.1f}  /sec")
-    print(f" 2) stats:   {(mkr_t5 - mkr_t4):6.3f} sec")
-    print(f" 3) convert: {(mkr_t6 - mkr_t5):6.3f} sec")
-    print(f" 4) display: {(mkr_t7 - mkr_t6):6.3f} sec")
-    print("             =======")
-    print(f"total frame: {(mkr_t7 - mkr_t2):6.3f} sec  ", end="")
-    print(f"{(1 / (mkr_t7 - mkr_t2)):5.1f}   /sec")
-    print(f"           free memory:   {mem_fm7 / 1000:6.3f} Kb")
+    print(
+        f" 1) data acquisition: {(marker_t4 - marker_t2):6.3f}      rate:  {(1 / (marker_t4 - marker_t2)):5.1f} /sec"
+    )
+    print(f" 2) display stats:    {(marker_t5 - marker_t4):6.3f}")
+    print(f" 3) interpolate:      {(marker_t6 - marker_t5):6.3f}")
+    print(f" 4) display image:    {(marker_t7 - marker_t6):6.3f}")
+    print(f"                     =======")
+    print(
+        f"total frame:          {(marker_t7 - marker_t2):6.3f} sec  rate:  {(1 / (marker_t7 - marker_t2)):5.1f} /sec"
+    )
+    print(f"                           free memory: {mem_fm7 / 1000:6.3} Kb")
     print("")

@@ -15,7 +15,7 @@ ignore=CVS
 
 # Add files or directories matching the regex patterns to the ignore-list. The
 # regex matches against base names, not paths.
-ignore-patterns=
+ignore-patterns=**/archive/*.py
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().

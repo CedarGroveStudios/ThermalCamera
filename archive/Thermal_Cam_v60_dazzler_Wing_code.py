@@ -77,6 +77,7 @@ WHITE = 0xFFFFFF
 # Text colors for setup helper's on-screen parameters
 param_colors = [("ALARM", WHITE), ("RANGE", RED), ("RANGE", CYAN)]
 
+
 # ### Helpers ###
 def play_tone(freq=440, duration=0.01):
     tone(board.A0, freq, duration)
@@ -100,7 +101,6 @@ def spectrum():  # Load a test spectrum into the grid_data array
 
 
 def update_image_frame(selfie=False):  # Get camera data and update display
-
     # display.ClearColorRGB(255, 255, 2555)
     display.Clear()
 

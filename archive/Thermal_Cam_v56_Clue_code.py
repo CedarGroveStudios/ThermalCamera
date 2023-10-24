@@ -88,6 +88,7 @@ WHITE = 0xFFFFFF
 # Text colors for setup helper
 # param_list = [("ALARM", WHITE), ("RANGE", RED), ("RANGE", CYAN)]
 
+
 # ### Helpers ###
 def play_tone(freq=440, duration=0.01):
     # tone(board.A0, freq, duration)

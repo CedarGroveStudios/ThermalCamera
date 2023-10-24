@@ -95,6 +95,7 @@ WHITE = 0xFFFFFF
 # Text colors for setup method's on-screen parameters
 param_colors = [("ALARM", WHITE), ("RANGE", RED), ("RANGE", CYAN)]
 
+
 # ### Helpers ###
 def play_tone(freq=440, duration=0.01):
     tone(board.A0, freq, duration)

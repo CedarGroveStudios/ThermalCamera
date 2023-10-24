@@ -24,6 +24,7 @@
 
 # CircuitPython-specific files
 *.mpy
+/archive/*.py
 
 # Python-specific files
 __pycache__

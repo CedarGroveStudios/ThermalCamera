@@ -95,9 +95,13 @@ GRID_X_OFFSET = WIDTH - GRID_SIZE  # Right-align grid with display boundary
 CELL_SIZE = GRID_SIZE // GRID_AXIS  # Size of a grid cell in pixels
 
 # Set up sensor data narray
-SENSOR_DATA = ulab.numpy.array(range(SENSOR_AXIS ** 2)).reshape((SENSOR_AXIS, SENSOR_AXIS))
+SENSOR_DATA = ulab.numpy.array(range(SENSOR_AXIS**2)).reshape(
+    (SENSOR_AXIS, SENSOR_AXIS)
+)
 # Set up and load the display color index narray with a spectrum
-GRID_DATA = ulab.numpy.array(range(GRID_AXIS ** 2)).reshape((GRID_AXIS, GRID_AXIS)) / (GRID_AXIS ** 2)
+GRID_DATA = ulab.numpy.array(range(GRID_AXIS**2)).reshape((GRID_AXIS, GRID_AXIS)) / (
+    GRID_AXIS**2
+)
 # Set up histogram accumulation narray
 HISTOGRAM = ulab.numpy.zeros(GRID_AXIS)
 
@@ -118,6 +122,7 @@ WHITE = 0xFFFFFF
 
 # Text colors for setup helper's on-screen parameters
 SETUP_COLORS = [("ALARM", WHITE), ("RANGE", RED), ("RANGE", CYAN)]
+
 
 # ### Helpers ###
 def play_tone(freq=440, duration=0.01):
@@ -282,7 +287,7 @@ def get_joystick(param=0):
             return 1
         elif joystick_y.value > 44000:
             # Down
-            return - 1
+            return -1
     return 0
 
 
@@ -434,8 +439,8 @@ while True:
             play_tone(1319, 0.030)  # E6
             display_hold = not display_hold
 
-        if (buttons.key_number == BUTTON_IMAGE):
-        # Toggle image/histogram mode (display image)
+        if buttons.key_number == BUTTON_IMAGE:
+            # Toggle image/histogram mode (display image)
             play_tone(659, 0.030)  # E5
             display_image = not display_image
 

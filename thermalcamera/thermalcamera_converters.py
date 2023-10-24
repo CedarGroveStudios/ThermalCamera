@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2022 Jan Goolsbey for Adafruit Industries
+# SPDX-FileCopyrightText: 2023 JG for Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
 """

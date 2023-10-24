@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2022 Jan Goolsbey for Adafruit Industries
+# SPDX-FileCopyrightText: 2023 JG for Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
 """
@@ -7,7 +7,7 @@
 Thermal Camera configuration parameters.
 """
 
-# ### Alarm and range default values in Farenheit ###
+# ### Alarm and range default values in Fahrenheit ###
 ALARM_F = 120
 MIN_RANGE_F = 60
 MAX_RANGE_F = 120

@@ -1,10 +1,12 @@
-# SPDX-FileCopyrightText: 2022 Jan Goolsbey for Adafruit Industries
+# SPDX-FileCopyrightText: 2023 JG for Cedar Grove Maker Studios
 # SPDX-License-Identifier: MIT
 
 """
 `thermalcamera`
 ================================================================================
 PyGamer/PyBadge Thermal Camera Project
+
+Rename thermalcamera.py to code.py and store in the device's root directory.
 """
 
 import time
@@ -26,6 +28,8 @@ from index_to_rgb.iron import index_to_rgb
 from thermalcamera_converters import celsius_to_fahrenheit, fahrenheit_to_celsius
 from thermalcamera_config import ALARM_F, MIN_RANGE_F, MAX_RANGE_F, SELFIE
 
+__version__ = "0.0.0+auto.0"
+__repo__ = "https://github.com/CedarGroveStudios/ThermalCamera.git"
 
 # Instantiate the integral display and define its size
 display = board.DISPLAY
@@ -81,7 +85,7 @@ amg8833 = adafruit_amg88xx.AMG88XX(i2c)
 splash = displayio.Group(scale=display.width // 160)
 bitmap = displayio.OnDiskBitmap("/thermalcamera_splash.bmp")
 splash.append(displayio.TileGrid(bitmap, pixel_shader=bitmap.pixel_shader))
-board.DISPLAY.show(splash)
+display.root_group = splash
 
 # Thermal sensor grid axis size; AMG8833 sensor is 8x8
 SENSOR_AXIS = 8
@@ -136,8 +140,8 @@ def flash_status(text="", duration=0.05):
 
 def update_image_frame(selfie=False):
     """Get camera data and update display"""
-    for _row in range(0, GRID_AXIS):
-        for _col in range(0, GRID_AXIS):
+    for _row in range(GRID_AXIS):
+        for _col in range(GRID_AXIS):
             if selfie:
                 color_index = GRID_DATA[GRID_AXIS - 1 - _row][_col]
             else:
@@ -164,8 +168,8 @@ def update_histo_frame():
         histo_scale = 1
 
     # Display the histogram
-    for _col in range(0, GRID_AXIS):
-        for _row in range(0, GRID_AXIS):
+    for _col in range(GRID_AXIS):
+        for _row in range(GRID_AXIS):
             if histogram[_col] / histo_scale > GRID_AXIS - 1 - _row:
                 image_group[((_row * GRID_AXIS) + _col)].fill = index_to_rgb(
                     round((_col / GRID_AXIS), 3)
@@ -292,8 +296,8 @@ image_group = displayio.Group(scale=1)
 
 # Define the foundational thermal image grid cells; image_group[0:224]
 #   image_group[#] = image_group[ (row * GRID_AXIS) + column ]
-for row in range(0, GRID_AXIS):
-    for col in range(0, GRID_AXIS):
+for row in range(GRID_AXIS):
+    for col in range(GRID_AXIS):
         cell_x = (col * CELL_SIZE) + GRID_X_OFFSET
         cell_y = row * CELL_SIZE
         cell = Rect(
@@ -381,7 +385,7 @@ orig_max_range_f = 0  # Establish temporary range variables
 orig_min_range_f = 0
 
 # Activate display, show preloaded sample spectrum, and play welcome tone
-display.show(image_group)
+display.root_group = image_group
 update_image_frame()
 flash_status("IRON", 0.75)
 play_tone(880, 0.010)  # Musical note A5

@@ -122,6 +122,7 @@ WHITE = 0xFFFFFF
 # Text colors for setup helper's on-screen parameters
 SETUP_COLORS = [("ALARM", WHITE), ("RANGE", RED), ("RANGE", CYAN)]
 
+
 # ### Helpers ###
 def play_tone(freq=440, duration=0.01):
     """Play a tone over the speaker"""

@@ -1,23 +1,6 @@
 Introduction
 ============
 
-
-
-
-.. image:: https://img.shields.io/discord/327254708534116352.svg
-    :target: https://adafru.it/discord
-    :alt: Discord
-
-
-.. image:: https://github.com/CedarGroveStudios/ThermalCamera/workflows/Build%20CI/badge.svg
-    :target: https://github.com/CedarGroveStudios/ThermalCamera/actions
-    :alt: Build Status
-
-
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
-    :alt: Code Style: Black
-
 A PyGamer/PyBadge thermal imaging tool.
 
 .. image:: https://github.com/CedarGroveStudios/ThermalCamera/blob/main/media/graphics/DSC06005a.jpg
